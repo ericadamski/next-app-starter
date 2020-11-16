@@ -1,4 +1,4 @@
-import { Page } from "@geist-ui/react";
+import { Page, Text } from "@geist-ui/react";
 
 export default function Home() {
   return (
