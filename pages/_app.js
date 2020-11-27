@@ -1,6 +1,7 @@
-import Head from "next/head";
+import { GeistProvider, CssBaseline } from "@geist-ui/react"
+import Head from "next/head"
 
-import GlobalStyles from "components/GlobalStyles";
+import GlobalStyles from "components/GlobalStyles"
 
 export default function App({ pageProps, Component }) {
   return (
@@ -49,8 +50,11 @@ export default function App({ pageProps, Component }) {
           }}
         />
       </Head>
-      <Component {...pageProps} />
-      <GlobalStyles />
+      <GeistProvider>
+        <CssBaseline />
+        <Component {...pageProps} />
+        <GlobalStyles />
+      </GeistProvider>
     </>
-  );
+  )
 }

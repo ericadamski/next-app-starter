@@ -1,11 +1,11 @@
 export default class NetworkError extends Error {
-  code = 500;
+  code = 500
 
   constructor(code, options = { message: "" }) {
-    this.message = message;
+    super(options.message)
 
     if (code != null) {
-      this.code = code;
+      this.code = code
     }
   }
 }

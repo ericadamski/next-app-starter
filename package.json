@@ -18,13 +18,16 @@
     "firebase-admin": "^9.4.1",
     "framer-motion": "^2.9.4",
     "js-cookie": "^2.2.1",
+    "libphonenumber-js": "^1.9.4",
     "next": "^10.0.1",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-hook-form": "^6.11.5",
-    "swr": "^0.3.8"
+    "swr": "^0.3.8",
+    "twilio": "^3.52.0"
   },
   "devDependencies": {
+    "@welldone-software/why-did-you-render": "^6.0.3",
     "cypress": "^5.6.0"
   }
 }

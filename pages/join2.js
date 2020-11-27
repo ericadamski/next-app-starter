@@ -1,24 +1,18 @@
-import { Page, Col, Row, Input, Text, Button } from "@geist-ui/react"
+import { Page, Col, Row, Input, Text, Button, useToasts } from "@geist-ui/react"
 import { useRef, useEffect, useState, useCallback } from "react"
 import { useForm } from "react-hook-form"
-import firebase from "firebase"
-import "firebase/auth"
 import parsePhoneNumber from "libphonenumber-js"
 
-import initFirebase from "lib/firebase"
-
-initFirebase()
-
-const provider = new firebase.auth.PhoneAuthProvider()
-
-const BUTTON_ID = "sign-in-button"
+import { SMSVerification } from "lib/api"
+import UserError from "utils/userError"
 
 let COUNTRY
 
 export default function JoinPage() {
-  const recaptcha = useRef(null)
+  const [verificationId, setVerificationId] = useState(null)
+  const [to, setTo] = useState(null)
+  const [_, setToast] = useToasts()
   const [loading, setLoading] = useState(false)
-  const [verificationId, setVerificationId] = useState()
   const {
     watch,
     handleSubmit,
@@ -29,10 +23,31 @@ export default function JoinPage() {
     getValues,
   } = useForm()
 
-  console.log(verificationId)
-  console.count("render")
-
   const pnChange = watch("phoneNumber")
+
+  const handleError = useCallback(
+    (error) => {
+      console.log(error)
+      if (error instanceof UserError) {
+        setToast({
+          type: "warning",
+          delay: 3000,
+          text: `${error.title}
+      ${error.message}`,
+        })
+      } else {
+        setToast({
+          type: "error",
+          text: `Something when wrong`,
+          delay: Infinity,
+          actions: [
+            { name: "Refresh", handler: () => window.location.reload() },
+          ],
+        })
+      }
+    },
+    [setToast],
+  )
 
   useEffect(() => {
     if (pnChange) {
@@ -47,27 +62,25 @@ export default function JoinPage() {
     async ({ phoneNumber }) => {
       setLoading(true)
 
-      const n = parsePhoneNumber(phoneNumber, COUNTRY)?.number
-
-      if (!n) {
-        // This should never happen otherwise the form validation
-        // failed and ths was still allowed to run
-        throw new Error(`Invalid phone number`)
-      }
-
       try {
-        setVerificationId(
-          await provider.verifyPhoneNumber(n, recaptcha?.current),
-        )
+        const n = parsePhoneNumber(phoneNumber, COUNTRY)?.number
+
+        if (!n) {
+          // This should never happen otherwise the form validation
+          // failed and ths was still allowed to run
+          throw new UserError(`Invalid phone number`)
+        }
+
+        setTo(n)
+        setVerificationId(await SMSVerification.request(n))
         reset()
       } catch (error) {
-        // reset recaptcha
-        grecaptcha.reset(await recaptcha.current?.render())
+        handleError(error)
       } finally {
         setLoading(false)
       }
     },
-    [recaptcha],
+    [setVerificationId, setLoading, handleError],
   )
 
   const handleValidate = useCallback(
@@ -77,32 +90,26 @@ export default function JoinPage() {
 
   const verify = useCallback(
     async ({ code }) => {
-      console.log({ verificationId })
       setLoading(true)
 
       try {
-        const creds = await firebase.auth.PhoneAuthProvider.credential(
-          verificationId,
-          code,
-        )
+        const valid = await SMSVerification.verify(to, code, verificationId)
 
-        console.log({ creds })
-
-        const user = await firebase.auth().signInWithCredential(creds)
-
-        console.log(user)
+        if (valid) {
+          // create user in FB with pn, uuid, verified = true
+          console.log("verified")
+        }
       } catch (error) {
-        console.error("there was an error validating the code", error, code)
+        handleError(error)
       } finally {
         setLoading(false)
       }
     },
-    [verificationId],
+    [verificationId, setLoading, handleError, to],
   )
 
   const handleFormSubmit = useCallback(
     (data) => {
-      console.log({ data })
       if (data.code) {
         verify(data)
       } else {
@@ -113,13 +120,8 @@ export default function JoinPage() {
   )
 
   useEffect(() => {
-    if (typeof window !== undefined && !recaptcha.current) {
+    if (typeof window !== undefined) {
       COUNTRY = navigator.language?.split("-").pop()
-
-      firebase.auth().useDeviceLanguage()
-      recaptcha.current = new firebase.auth.RecaptchaVerifier(BUTTON_ID, {
-        size: "invisible",
-      })
     }
   }, [])
 
@@ -145,7 +147,7 @@ export default function JoinPage() {
             })}
           />
         )}
-        <Button htmlType="submit" id={BUTTON_ID} loading={loading}>
+        <Button htmlType="submit" loading={loading}>
           {verificationId ? "Verify" : "Join now"}
         </Button>
       </form>
