@@ -1,0 +1,57 @@
+name: E2E Tests
+on: push
+
+jobs:
+  cypress:
+    runs-on: ubuntu-16.04
+    name: Chrome
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: NextJS cache
+        uses: actions/cache@v2
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs
+      - name: Node modules cache
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/yarn.lock') }}
+      - name: Cache Cypress
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress
+      - name: Install Node modules
+        run: yarn install --frozen-lockfile
+        env:
+          CYPRESS_INSTALL_BINARY: 0
+      - name: Start Firebase emulator
+        run: |
+          npm install -g firebase-tools
+          firebase emulators:start --only auth,firestore
+      - name: Build and start frontend
+        run: |
+          yarn build
+          yarn start &
+        env:
+          NODE_ENV: test
+      - name: Install Cypress
+        run: npx cypress install
+      - name: Cypress run
+        id: cypress
+        uses: cypress-io/github-action@v2
+        with:
+          browser: chrome
+          env: HIGH_RESOLUTION=true NODE_ENV=test
+          install: false
+      - name: Cypress test artifacts
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: cypress-artifacts-${{ github.sha }}
+          path: |
+            webapp/cypress/videos
+            webapp/cypress/screenshots

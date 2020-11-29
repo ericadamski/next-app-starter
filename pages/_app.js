@@ -3,6 +3,18 @@ import Head from "next/head"
 
 import GlobalStyles from "components/GlobalStyles"
 
+if (process.env.NODE_ENV === "development") {
+  const isSSR = typeof window === "undefined"
+
+  if (!isSSR) {
+    const { worker } = require("../mocks/browser")
+    worker.start()
+  } else {
+    const { server } = require("../mocks/server")
+    server.listen()
+  }
+}
+
 export default function App({ pageProps, Component }) {
   return (
     <>

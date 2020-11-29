@@ -1,12 +1,19 @@
 import { Page, Col, Row, Input, Text, Button, useToasts } from "@geist-ui/react"
+import Router from "next/router"
 import { useRef, useEffect, useState, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import parsePhoneNumber from "libphonenumber-js"
+import firebase from "firebase"
+import "firebase/auth"
 
-import { SMSVerification } from "lib/api"
+import { setUserCookie } from "lib/cookies"
+import initFirebase, { getAuth } from "lib/firebase"
+import { SMSVerification, User } from "lib/api"
 import UserError from "utils/userError"
 
 let COUNTRY
+
+initFirebase()
 
 export default function JoinPage() {
   const [verificationId, setVerificationId] = useState(null)
@@ -96,8 +103,11 @@ export default function JoinPage() {
         const valid = await SMSVerification.verify(to, code, verificationId)
 
         if (valid) {
-          // create user in FB with pn, uuid, verified = true
-          console.log("verified")
+          const token = await User.create(to)
+          const user = await getAuth().signInWithCustomToken(token)
+
+          setUserCookie(user)
+          Router.push("/dashboard")
         }
       } catch (error) {
         handleError(error)
