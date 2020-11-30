@@ -24,4 +24,33 @@
 // -- This will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
 
+import { v4 as uuidv4 } from "uuid"
 import "@testing-library/cypress/add-commands"
+
+import initFirebase, { getAuth } from "../../lib/firebase"
+import { setUserCookie, removeUserCookies } from "../../lib/cookies"
+
+const config = {
+  apiKey: Cypress.env("FIREBASE_PUBLIC_API_KEY"),
+  authDomain: Cypress.env("FIREBASE_AUTH_DOMAIN"),
+  databaseURL: Cypress.env("FIREBASE_DATABASE_URL"),
+  projectId: Cypress.env("FIREBASE_PROJECT_ID"),
+}
+
+initFirebase(config)
+
+Cypress.Commands.add("login", () => {
+  const uid = uuidv4()
+
+  return cy.task("createCustomToken", { uid }).then((token) => {
+    getAuth().signInWithCustomToken(token)
+
+    setUserCookie({ uid })
+  })
+})
+
+Cypress.Commands.add("logout", () => {
+  getAuth()
+    .signOut()
+    .then(() => removeUserCookies())
+})

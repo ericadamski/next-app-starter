@@ -43,4 +43,18 @@ describe("Join", () => {
 
     cy.findByText("Dashboard").should("not.exist")
   })
+
+  it("should login without the interface", () => {
+    cy.login()
+
+    cy.visit("/dashboard")
+
+    cy.findByText("Dashboard").should("exist")
+  })
+
+  it("should redirect home if not logged in", () => {
+    cy.logout()
+    cy.visit("/dashboard")
+    cy.findByText("Dashboard").should("not.exist")
+  })
 })

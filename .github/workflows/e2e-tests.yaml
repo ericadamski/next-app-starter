@@ -48,4 +48,6 @@ jobs:
         with:
           browser: chrome
           env: HIGH_RESOLUTION=true NODE_ENV=test
+          wait-on: "http://localhost:3001"
+          wait-on-timeout: 120
           install: false

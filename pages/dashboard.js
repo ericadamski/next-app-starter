@@ -3,9 +3,11 @@ import Redirect from "components/Redirect"
 
 export default function Dashboard() {
   return (
-    <Page>
-      <Redirect />
-      <Text h1>Dashboard</Text>
-    </Page>
+    <>
+      <Redirect redirectTo="/join" />
+      <Page>
+        <Text h1>Dashboard</Text>
+      </Page>
+    </>
   )
 }

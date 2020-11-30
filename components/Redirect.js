@@ -1,7 +1,7 @@
-import React from "react";
-import Head from "next/head";
+import React from "react"
+import Head from "next/head"
 
-const FORCED_HOME_PATH = process.env.NEXT_PUBLIC_FORCED_HOME_PATH ?? "/home";
+const FORCED_HOME_PATH = process.env.NEXT_PUBLIC_FORCED_HOME_PATH ?? "/home"
 
 export default function Redirect(props) {
   return (
@@ -10,7 +10,7 @@ export default function Redirect(props) {
         <script
           dangerouslySetInnerHTML={{
             __html: `
-            if (document.cookie && document.cookie.indexOf("authed") ${
+            if (document.cookie != null && document.cookie.indexOf("authed") ${
               props.redirectOnUser ? "> -1" : "< 0"
             }) {
                 if (document.location.pathname !== "${FORCED_HOME_PATH}") {
@@ -32,5 +32,5 @@ export default function Redirect(props) {
         }
       `}</style>
     </>
-  );
+  )
 }

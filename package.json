@@ -31,6 +31,7 @@
   "devDependencies": {
     "@welldone-software/why-did-you-render": "^6.0.3",
     "cypress": "^6.0.0",
+    "dotenv": "^8.2.0",
     "firebase-tools": "^8.16.2",
     "msw": "^0.23.0"
   }
