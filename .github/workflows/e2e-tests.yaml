@@ -5,7 +5,7 @@ jobs:
   cypress:
     runs-on: ubuntu-16.04
     name: Chrome
-    timeout-minutes: 30
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -35,10 +35,7 @@ jobs:
           CYPRESS_INSTALL_BINARY: 0
       - name: Build and start frontend
         run: |
-          yarn build
-          yarn start &
-        env:
-          NODE_ENV: test
+          yarn dev &
       - name: Install Cypress
         run: npx cypress install
       - name: Start Firebase emluators
@@ -48,9 +45,7 @@ jobs:
           yarn firebase emulators:start --only auth,firestore &
       - name: Cypress run
         id: cypress
-        # uses: cypress-io/github-action@v2
-        run: |
-          yarn cypress run
+        uses: cypress-io/github-action@v2
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
@@ -59,9 +54,9 @@ jobs:
           NEXT_PUBLIC_FIREBASE_PUBLIC_API_KEY: ${{ secrets.FIREBASE_PUBLIC_API_KEY }}
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-        # with:
-        #   browser: chrome
-        #   env: HIGH_RESOLUTION=true NODE_ENV=test
-        #   wait-on: "http://localhost:3001"
-        #   wait-on-timeout: 120
-        #   install: false
+        with:
+          browser: chrome
+          env: HIGH_RESOLUTION=true NODE_ENV=test
+          wait-on: "http://localhost:3001"
+          wait-on-timeout: 120
+          install: false
