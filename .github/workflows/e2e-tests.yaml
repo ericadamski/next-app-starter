@@ -24,6 +24,11 @@ jobs:
         with:
           path: ~/.cache/Cypress
           key: ${{ runner.os }}-cypress
+      - name: Cache Firebase emulators
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/firebase/emulators
+          key: ${{ runner.os }}-fbemulators
       - name: Install Node modules
         run: yarn install --frozen-lockfile
         env:
