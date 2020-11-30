@@ -1,5 +1,7 @@
 # cypress
 cypress/fixtures
+cypress/screenshots
+cypress/videos
 
 # Logs
 logs

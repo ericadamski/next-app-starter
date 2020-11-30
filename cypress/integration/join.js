@@ -11,9 +11,11 @@ describe("Join", () => {
     cy.get("@phoneInput").invoke("val").should("equal", "(613) 456-7898")
     cy.findByText("Join now").click()
 
+    cy.findByPlaceholderText("Code").should("exist")
     cy.findByPlaceholderText("Code").type("12345")
     cy.findByText("Verify").click()
 
+    cy.wait(200)
     cy.findByText("Dashboard").should("exist")
     cy.getCookie("authed").should("exist")
   })
