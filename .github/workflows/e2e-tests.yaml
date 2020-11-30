@@ -37,11 +37,10 @@ jobs:
       - name: Install Cypress
         run: npx cypress install
       - name: Start Firebase emluators
-        uses: w9jds/firebase-action@master
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-        with:
-          args: emulators:start --only auth,firestore
+        run: |
+          yarn firebase emulators:start --only auth,firestore &
       - name: Cypress run
         id: cypress
         uses: cypress-io/github-action@v2
