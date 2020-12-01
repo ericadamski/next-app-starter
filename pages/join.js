@@ -107,8 +107,8 @@ export default function JoinPage() {
         )
 
         if (valid) {
-          const token = await User.create(data.to, data.name)
-          const user = await getAuth().signInWithCustomToken(token)
+          const { token, user } = await User.create(data.to, data.name)
+          await getAuth().signInWithCustomToken(token)
 
           setUserCookie(user)
           Router.push("/dashboard")

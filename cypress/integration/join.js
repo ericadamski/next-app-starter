@@ -18,6 +18,7 @@ describe("Join", () => {
 
     cy.wait(200)
     cy.findByText("Dashboard").should("exist")
+    cy.findByText("Welcome Eric").should("exist")
     cy.getCookie("authed").should("exist")
   })
 
@@ -50,6 +51,7 @@ describe("Join", () => {
     cy.visit("/dashboard")
 
     cy.findByText("Dashboard").should("exist")
+    cy.findByText("Welcome Test").should("exist")
   })
 
   it("should redirect home if not logged in", () => {

@@ -15,20 +15,26 @@ import log from "utils/log"
 
 initFirebase()
 
-function fetcher(route, token) {
-  return User.get(token)
+async function fetcher(route, token) {
+  const user = await User.get(token)
+
+  return setUserCookie(user)
 }
 
 export default function useUser() {
   const [userIdToken, setUserIdToken] = useState()
   const router = useRouter()
-  const { data, mutate, error } = useSWR(() => {
-    if (!userIdToken) {
-      throw new Error("Missing user token")
-    }
+  const { data, mutate, error } = useSWR(
+    () => {
+      if (!userIdToken) {
+        throw new Error("Missing user token")
+      }
 
-    return ["/api/user/get", userIdToken]
-  }, fetcher)
+      return ["/api/user/get", userIdToken]
+    },
+    fetcher,
+    { initialData: getUserFromCookie() },
+  )
 
   const logout = () => {
     return getAuth()
@@ -41,10 +47,18 @@ export default function useUser() {
   }
 
   useEffect(() => {
-    const tokenListener = (user) => {
+    let authToken
+
+    getAuth()
+      .currentUser?.getIdToken()
+      .then((token) => setUserIdToken((authToken = token)))
+      .catch(log.error)
+
+    const tokenListener = async (user) => {
       if (user) {
-        setUserCookie(user)
-        mutate()
+        if ((await getAuth().currentUser?.getIdToken()) !== authToken) {
+          mutate()
+        }
       } else {
         removeUserCookies()
         mutate()
@@ -52,11 +66,6 @@ export default function useUser() {
     }
 
     const cancelListener = getAuth().onIdTokenChanged(tokenListener)
-
-    getAuth()
-      .currentUser.getIdToken()
-      .then((token) => setUserIdToken(token))
-      .catch(log.error)
 
     return () => cancelListener()
   }, [])

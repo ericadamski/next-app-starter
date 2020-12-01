@@ -45,7 +45,7 @@ Cypress.Commands.add("login", () => {
   return cy.task("createCustomToken", { uid }).then((token) => {
     getAuth().signInWithCustomToken(token)
 
-    setUserCookie({ uid })
+    setUserCookie({ uid, name: "Test" })
   })
 })
 

@@ -24,16 +24,24 @@ export default handlers.post(async (req, res) => {
   const user = await db.collection("users").doc(phoneNumber).get()
 
   if (user.exists) {
-    return res.end(await firebase.auth().createCustomToken(user.data().uid))
+    return res.json({
+      token: await firebase.auth().createCustomToken(user.data().uid),
+      user: user.data(),
+    })
   }
 
-  await db.collection("users").doc(phoneNumber).set({
+  const userObj = {
     uid,
     phoneNumber,
     name,
-  })
+  }
+
+  await db.collection("users").doc(phoneNumber).set(userObj)
 
   // TODO: handle additionalClaims for admin/premium
 
-  return res.end(await firebase.auth().createCustomToken(uid))
+  return res.json({
+    token: await firebase.auth().createCustomToken(uid),
+    user: userObj,
+  })
 })
