@@ -1,52 +1,65 @@
-import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
-import firebase from "firebase/app";
-import "firebase/auth";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/router"
+import useSWR from "swr"
+import firebase from "firebase/app"
+import "firebase/auth"
 
-import initFirebase from "lib/firebase";
+import { User } from "lib/api"
+import initFirebase, { getAuth } from "lib/firebase"
 import {
   removeUserCookies,
   setUserCookie,
   getUserFromCookie,
-} from "lib/cookies";
+} from "lib/cookies"
+import log from "utils/log"
 
-initFirebase();
+initFirebase()
 
-export const useUser = () => {
-  const [user, setUser] = useState();
-  const router = useRouter();
+function fetcher(route, token) {
+  return User.get(token)
+}
+
+export default function useUser() {
+  const [userIdToken, setUserIdToken] = useState()
+  const router = useRouter()
+  const { data, mutate, error } = useSWR(() => {
+    if (!userIdToken) {
+      throw new Error("Missing user token")
+    }
+
+    return ["/api/user/get", userIdToken]
+  }, fetcher)
 
   const logout = () => {
-    return firebase
-      .auth()
+    return getAuth()
       .signOut()
       .then(() => {
-        router.push("/welcome");
-        removeUserCookies();
+        removeUserCookies()
+        router.push("/")
       })
-      .catch((e) => console.error(e));
-  };
+      .catch(log.error)
+  }
 
   useEffect(() => {
     const tokenListener = (user) => {
       if (user) {
-        setUser(setUserCookie(user));
+        setUserCookie(user)
+        mutate()
       } else {
-        removeUserCookies();
-        setUser();
+        removeUserCookies()
+        mutate()
       }
-    };
-
-    const cancelListener = firebase.auth().onIdTokenChanged(tokenListener);
-
-    const userFromCookie = getUserFromCookie();
-
-    if (userFromCookie) {
-      setUser(userFromCookie);
     }
 
-    return () => cancelListener();
-  }, []);
+    const cancelListener = getAuth().onIdTokenChanged(tokenListener)
 
-  return { user, logout };
-};
+    getAuth()
+      .currentUser.getIdToken()
+      .then((token) => setUserIdToken(token))
+      .catch(log.error)
+
+    return () => cancelListener()
+  }, [])
+
+  return { user: data, loading: !error && !data, logout }
+}

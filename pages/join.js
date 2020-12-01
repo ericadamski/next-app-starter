@@ -17,7 +17,7 @@ initFirebase()
 
 export default function JoinPage() {
   const [verificationId, setVerificationId] = useState(null)
-  const [to, setTo] = useState(null)
+  const [data, setData] = useState(null)
   const [_, setToast] = useToasts()
   const [loading, setLoading] = useState(false)
   const {
@@ -66,7 +66,7 @@ export default function JoinPage() {
   }, [pnChange, COUNTRY])
 
   const handleSignIn = useCallback(
-    async ({ phoneNumber }) => {
+    async ({ phoneNumber, name }) => {
       setLoading(true)
 
       try {
@@ -78,7 +78,7 @@ export default function JoinPage() {
           throw new UserError(`Invalid phone number`)
         }
 
-        setTo(n)
+        setData({ to: n, name })
         setVerificationId(await SMSVerification.request(n))
         reset()
       } catch (error) {
@@ -100,10 +100,14 @@ export default function JoinPage() {
       setLoading(true)
 
       try {
-        const valid = await SMSVerification.verify(to, code, verificationId)
+        const valid = await SMSVerification.verify(
+          data.to,
+          code,
+          verificationId,
+        )
 
         if (valid) {
-          const token = await User.create(to)
+          const token = await User.create(data.to, data.name)
           const user = await getAuth().signInWithCustomToken(token)
 
           setUserCookie(user)
@@ -115,7 +119,7 @@ export default function JoinPage() {
         setLoading(false)
       }
     },
-    [verificationId, setLoading, handleError, to],
+    [verificationId, setLoading, handleError, data],
   )
 
   const handleFormSubmit = useCallback(
@@ -146,16 +150,24 @@ export default function JoinPage() {
             ref={register({ required: true })}
           />
         ) : (
-          <Input
-            name="phoneNumber"
-            placeholder="Phone Number"
-            type="tel"
-            status={errors.phoneNumber && "error"}
-            ref={register({
-              required: true,
-              validate: handleValidate,
-            })}
-          />
+          <>
+            <Input
+              name="name"
+              placeholder="Name"
+              status={errors.name && "error"}
+              ref={register({ required: true })}
+            />
+            <Input
+              name="phoneNumber"
+              placeholder="Phone Number"
+              type="tel"
+              status={errors.phoneNumber && "error"}
+              ref={register({
+                required: true,
+                validate: handleValidate,
+              })}
+            />
+          </>
         )}
         <Button htmlType="submit" loading={loading}>
           {verificationId ? "Verify" : "Join now"}

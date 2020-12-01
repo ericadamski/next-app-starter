@@ -9,6 +9,7 @@ describe("Join", () => {
   it("should be able to log in", () => {
     cy.findByPlaceholderText("Phone Number").as("phoneInput").type("6134567898")
     cy.get("@phoneInput").invoke("val").should("equal", "(613) 456-7898")
+    cy.findByPlaceholderText("Name").type("Eric")
     cy.findByText("Join now").click()
 
     cy.findByPlaceholderText("Code").should("exist")
@@ -32,18 +33,15 @@ describe("Join", () => {
     })
 
     cy.findByPlaceholderText("Phone Number").as("phoneInput").type("6134567898")
-    // it should format the phone number
     cy.get("@phoneInput").invoke("val").should("equal", "(613) 456-7898")
-
+    cy.findByPlaceholderText("Name").type("Eric")
     cy.findByText("Join now").click()
 
     cy.findByPlaceholderText("Code").type("12345")
-
     cy.findByText("Verify").click()
 
-    cy.getCookie("authed").should("not.exist")
-
     cy.findByText("Dashboard").should("not.exist")
+    cy.getCookie("authed").should("not.exist")
   })
 
   it("should login without the interface", () => {

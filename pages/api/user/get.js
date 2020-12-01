@@ -1,16 +1,27 @@
-import firebase from "lib/firebase"
+import firebase from "lib/firebase-admin"
 
 import ensureAuth from "utils/ensureAuth"
 import handlers from "utils/requestHandlers"
 import NetworkError from "utils/networkError"
 
-export default handlers.get(async (req, res) => {
+let db
+
+export default handlers.post(async (req, res) => {
   const { token } = req.body
 
-  const user = ensureAuth(token)
+  const { user_id } = (await ensureAuth(token)) ?? {}
 
-  console.log(user)
+  if (!db) {
+    db = firebase.firestore()
+  }
 
-  // possibly get all data related to user
-  res.json(user)
+  const users = await db.collection("users").where("uid", "==", user_id).get()
+
+  if (users.empty || users.size !== 1) {
+    throw new NetworkError(400)
+  }
+
+  const { 0: user } = users.docs
+
+  res.json(user.data())
 })
